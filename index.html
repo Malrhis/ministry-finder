@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>St Ignatius Ministry Finder</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#eef1f8;min-height:100vh;display:flex;justify-content:center;align-items:flex-start}
+.app{width:100%;max-width:430px;min-height:100vh;background:#fff;display:flex;flex-direction:column;position:relative}
+.screen{display:none;flex-direction:column;min-height:100vh;padding:24px 20px 36px}
+.screen.active{display:flex}
+
+/* Welcome */
+.welcome-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0}
+.logo{font-size:56px;margin-bottom:12px}
+.welcome-top h1{color:#1a3a6b;font-size:26px;font-weight:800;line-height:1.25;margin-bottom:8px}
+.welcome-top p{color:#6b7a99;font-size:15px;line-height:1.6;max-width:300px}
+.name-label{font-size:14px;font-weight:600;color:#1a3a6b;margin-bottom:6px;align-self:flex-start}
+.name-input{width:100%;padding:14px 16px;border:2px solid #dde2f0;border-radius:14px;font-size:16px;outline:none;transition:border-color .2s;background:#f8f9fe}
+.name-input:focus{border-color:#1a3a6b;background:#fff}
+
+/* Progress */
+.prog-wrap{display:flex;gap:6px;margin-bottom:24px}
+.prog-dot{flex:1;height:5px;border-radius:3px;background:#e5e9f5;transition:background .3s}
+.prog-dot.done{background:#c9a84c}
+.prog-dot.active{background:#1a3a6b}
+
+/* Question */
+.q-title{color:#1a3a6b;font-size:22px;font-weight:800;line-height:1.3;margin-bottom:4px}
+.q-sub{color:#9aa3be;font-size:13px;margin-bottom:20px}
+
+/* Options */
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;align-content:start}
+.opts.three{grid-template-columns:1fr 1fr 1fr}
+.opt{background:#f4f6fc;border:2.5px solid transparent;border-radius:16px;padding:16px 10px;text-align:center;cursor:pointer;transition:all .18s;user-select:none;-webkit-tap-highlight-color:transparent}
+.opt:active{transform:scale(.96)}
+.opt.sel{background:#e8edf8;border-color:#1a3a6b}
+.opt .ic{font-size:30px;margin-bottom:6px}
+.opt .lb{font-size:13px;font-weight:700;color:#1e2b4a}
+.opt .sb{font-size:11px;color:#9aa3be;margin-top:2px}
+
+/* Buttons */
+.btn{background:#1a3a6b;color:#fff;border:none;border-radius:16px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;width:100%;margin-top:18px;transition:opacity .2s,transform .1s;letter-spacing:.3px}
+.btn:active{transform:scale(.98)}
+.btn:disabled{background:#c8cfe8;cursor:default}
+.btn.gold{background:linear-gradient(135deg,#c9a84c,#e2c06a)}
+.btn.outline{background:#fff;border:2px solid #1a3a6b;color:#1a3a6b;margin-top:10px}
+
+/* Results */
+.res-head{text-align:center;padding:24px 0 16px}
+.res-head h2{color:#1a3a6b;font-size:24px;font-weight:800}
+.res-head p{color:#6b7a99;font-size:14px;margin-top:5px;line-height:1.5}
+.card{background:#fff;border:1.5px solid #e8ecf5;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 3px 12px rgba(26,58,107,.07)}
+.card-name{font-size:17px;font-weight:800;color:#1a3a6b;margin-bottom:5px;line-height:1.3}
+.card-cat{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:3px 9px;border-radius:20px;margin-bottom:10px}
+.sp{background:#fde8d8;color:#8b4513}
+.li{background:#fde0dd;color:#b03020}
+.mu{background:#ead5f5;color:#6c3483}
+.fc{background:#d6eaf8;color:#1a5276}
+.mi{background:#d5f5e3;color:#1a5e2e}
+.card-desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:10px}
+.card-meta{font-size:12px;color:#9aa3be;margin-bottom:13px;line-height:1.6}
+.cbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;border:none;font-size:14px;font-weight:700;cursor:pointer;width:100%;text-decoration:none;transition:opacity .2s}
+.cbtn:active{opacity:.8}
+.wa{background:#25d366;color:#fff}
+.em{background:#f0f4ff;color:#1a3a6b;border:1.5px solid #d0d8f0}
+.wb{background:#f0f4ff;color:#1a3a6b;border:1.5px solid #d0d8f0}
+.try-again{text-align:center;padding:10px 0}
+
+/* Loading */
+.loading{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#9aa3be;font-size:15px}
+.spinner{width:36px;height:36px;border:3px solid #e5e9f5;border-top-color:#1a3a6b;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="app">
+
+<!-- WELCOME -->
+<div class="screen active" id="s0">
+  <div class="welcome-top">
+    <div class="logo">✝️</div>
+    <h1>Find Your Ministry<br>at St Ignatius</h1>
+    <p>Answer 2 quick questions and we'll find the right ministry for you.</p>
+  </div>
+  <div class="name-label">Your name</div>
+  <input class="name-input" id="uname" type="text" placeholder="e.g. Maria" autocomplete="off" oninput="checkStart()">
+  <div class="name-label" style="margin-top:14px">Your WhatsApp number</div>
+  <input class="name-input" id="uphone" type="tel" placeholder="e.g. 91234567" autocomplete="off" oninput="checkStart()">
+  <button class="btn gold" id="bstart" style="margin-top:20px" onclick="go('s1')" disabled>Let's Begin →</button>
+</div>
+
+<!-- Q1 -->
+<div class="screen" id="s1">
+  <div class="prog-wrap"><div class="prog-dot active"></div><div class="prog-dot"></div></div>
+  <div class="q-title">How would you like<br>to grow? 🌱</div>
+  <div class="q-sub">Pick all that apply</div>
+  <div class="opts" id="o1">
+    <div class="opt" data-v="pray" onclick="tog(this,'s1')"><div class="ic">🙏</div><div class="lb">Pray More</div><div class="sb">Devotion & meditation</div></div>
+    <div class="opt" data-v="worship" onclick="tog(this,'s1')"><div class="ic">🎵</div><div class="lb">Worship</div><div class="sb">Music & liturgy</div></div>
+    <div class="opt" data-v="learn" onclick="tog(this,'s1')"><div class="ic">📖</div><div class="lb">Learn My Faith</div><div class="sb">Scripture & formation</div></div>
+    <div class="opt" data-v="serve" onclick="tog(this,'s1')"><div class="ic">🤲</div><div class="lb">Serve Others</div><div class="sb">Service & outreach</div></div>
+    <div class="opt" data-v="connect" onclick="tog(this,'s1')"><div class="ic">👥</div><div class="lb">Find Community</div><div class="sb">Fellowship & friends</div></div>
+    <div class="opt" data-v="random" onclick="tog(this,'s1')"><div class="ic">🎲</div><div class="lb">Jesus Take the Wheel!</div></div>
+  </div>
+  <button class="btn" id="b1" disabled onclick="go('s2')">Next →</button>
+</div>
+
+<!-- Q2 -->
+<div class="screen" id="s2">
+  <div class="prog-wrap"><div class="prog-dot done"></div><div class="prog-dot active"></div></div>
+  <div class="q-title">Tell us about<br>yourself 👤</div>
+  <div class="q-sub">Pick all that apply</div>
+  <div class="opts" id="o2">
+    <div class="opt" data-v="youth" onclick="tog(this,'s2')"><div class="ic">🧒</div><div class="lb">Youth</div><div class="sb">Under 21</div></div>
+    <div class="opt" data-v="adult" onclick="tog(this,'s2')"><div class="ic">👨</div><div class="lb">Adult</div><div class="sb">21 &amp; above</div></div>
+  </div>
+  <button class="btn" id="b2" disabled onclick="showRes()">Find My Ministry →</button>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="s4" style="padding-bottom:40px">
+  <div class="res-head">
+    <h2>Your Matches 🎉</h2>
+    <p id="rsub"></p>
+  </div>
+  <div id="rcards"></div>
+  <div class="try-again">
+    <button class="btn outline" onclick="restart()">← Try Again</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ── SUPABASE CONFIG ──────────────────────────────────────────────────────────
+const SUPABASE_URL  = 'https://ywhyrbsycmifelqoepah.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_lrTA6ripi8etEVVGx39LfA_lVPOVCz9';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+// ────────────────────────────────────────────────────────────────────────────
+
+// Ministry data — loaded from Supabase on page load
+let DATA = [];
+let currentSessionId = null;
+
+const ministriesPromise = loadMinistriesFromDB();
+
+async function loadMinistriesFromDB() {
+  try {
+    const { data, error } = await db
+      .from('ministries')
+      .select('*')
+      .eq('active', true)
+      .order('sort_order');
+    if (error) throw error;
+    DATA = data || [];
+  } catch (e) {
+    console.warn('Could not load ministries from DB:', e);
+    DATA = [];
+  }
+}
+
+// ── SCORING ──────────────────────────────────────────────────────────────────
+const growMap = {
+  pray:    ['prayer','contemplative'],
+  worship: ['worship','music'],
+  learn:   ['formation','scripture'],
+  serve:   ['service','outreach','liturgy'],
+  connect: ['community'],
+  explore: ['exploring','returning'],
+  random:  ['__random__']
+};
+const whoMap = {
+  'youth': ['youth','children'],
+  'adult': ['adult','young-adult','senior','all-ages','married','couple','engaged','parent']
+};
+const timeMap = {
+  weekly:       ['weekly'],
+  monthly:      ['monthly','weekly'],
+  occasionally: ['ad-hoc','seasonal','monthly','weekly']
+};
+
+const catCls = c => ({
+  'Spirituality':'sp','Liturgy':'li','Music':'mu',
+  'Formation & Community':'fc','Mission':'mi'
+})[c] || 'fc';
+
+function scoreM(m, q1, q2, q3) {
+  // tags is already a JS object from Supabase JSONB
+  const t = m.tags || { grow: [], who: [], time: [] };
+  let s = 0;
+  const wg = q1.flatMap(a => growMap[a] || []);
+  wg.forEach(g => { if (t.grow.includes(g)) s += 3; });
+  const ww = q2.flatMap(a => whoMap[a] || []);
+  if (t.who.some(w => w.includes('all-ages'))) { s += 2; }
+  else { ww.forEach(w => { if (t.who.some(tw => tw.includes(w))) s += 2; }); }
+  const wt = timeMap[q3] || [];
+  t.time.forEach(tt => { if (wt.includes(tt)) s += 1; });
+  return s;
+}
+
+// ── CTA TRACKING ─────────────────────────────────────────────────────────────
+async function trackCta(sessionId, ministryName, ctaType) {
+  if (!sessionId) return;
+  try {
+    await db.from('cta_events').insert({
+      session_id:    sessionId,
+      ministry_name: ministryName,
+      cta_type:      ctaType
+    });
+  } catch (e) {
+    console.warn('Could not track CTA:', e);
+  }
+}
+
+// ── CARD BUILDER ─────────────────────────────────────────────────────────────
+function cleanPhone(p) {
+  if (!p) return null;
+  const first = p.split('/')[0].trim();
+  const d = first.replace(/\D/g, '');
+  if (d.length >= 8) return '65' + d.slice(-8);
+  return null;
+}
+function isUrl(s) { return s && (s.startsWith('http') || s.startsWith('www') || s.startsWith('bit.')); }
+
+function buildCard(m, sessionId) {
+  const name = document.getElementById('uname').value.trim() || 'there';
+  const msg  = encodeURIComponent(`Hi! I'm ${name} and I'm new to St Ignatius. I'd love to learn more about ${m.name}. Could you tell me how I can get involved?`);
+  const ph   = cleanPhone(m.phone);
+  const sid  = sessionId || '';
+  const mname = m.name.replace(/'/g, "\\'");
+
+  let btn = '';
+  if (ph) {
+    btn = `<a class="cbtn wa" href="https://wa.me/${ph}?text=${msg}" target="_blank"
+      onclick="trackCta('${sid}',${JSON.stringify(m.name)},'whatsapp')">💬 WhatsApp</a>`;
+  } else if (m.email && isUrl(m.email)) {
+    const url = m.email.split('|')[0].split('/')[0].trim();
+    btn = `<a class="cbtn wb" href="${url.startsWith('http') ? url : 'https://' + url}" target="_blank"
+      onclick="trackCta('${sid}',${JSON.stringify(m.name)},'website')">🔗 Learn More</a>`;
+  } else if (m.email) {
+    const em = m.email.split('/')[0].split('|')[0].trim();
+    btn = `<a class="cbtn em" href="mailto:${em}?subject=Enquiry about ${encodeURIComponent(m.name)}&body=${msg}"
+      onclick="trackCta('${sid}',${JSON.stringify(m.name)},'email')">✉️ Send Email</a>`;
+  } else {
+    btn = `<a class="cbtn em" href="mailto:church@stignatius.org.sg?subject=Enquiry about ${encodeURIComponent(m.name)}&body=${msg}"
+      onclick="trackCta('${sid}',${JSON.stringify(m.name)},'parish_office')">✉️ Contact Parish Office</a>`;
+  }
+
+  const meta = [
+    m.meeting ? `🕐 ${m.meeting}` : '',
+    m.age     ? `👤 ${m.age}`     : ''
+  ].filter(Boolean).join('<br>');
+
+  return `<div class="card">
+    <div class="card-name">${m.name}</div>
+    <span class="card-cat ${catCls(m.category)}">${m.category}</span>
+    <div class="card-desc">${m.description || 'A ministry at Church of St Ignatius — contact us to find out more!'}</div>
+    ${meta ? `<div class="card-meta">${meta}</div>` : ''}
+    ${btn}
+  </div>`;
+}
+
+// ── SAVE SESSION ─────────────────────────────────────────────────────────────
+async function saveSession(name, phone, growInterests, ageGroup, topMinistries) {
+  try {
+    const { data, error } = await db
+      .from('sessions')
+      .insert({
+        name,
+        whatsapp:                phone,
+        grow_interests:          growInterests,
+        age_group:               ageGroup,
+        recommended_ministries:  topMinistries
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    return data.id;
+  } catch (e) {
+    console.warn('Could not save session:', e);
+    return null;
+  }
+}
+
+// ── FLOW ─────────────────────────────────────────────────────────────────────
+let q1 = [], q2 = [], q3 = '';
+
+function go(to) {
+  if (to === 's2') { q1 = getVals('s1'); if (!q1.length) return; }
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(to).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function tog(el, sid) {
+  el.classList.toggle('sel');
+  const n = document.querySelectorAll(`#${sid} .opt.sel`).length;
+  const bid = sid.replace('s', 'b');
+  if (document.getElementById(bid)) document.getElementById(bid).disabled = n === 0;
+}
+
+function getVals(sid) {
+  return [...document.querySelectorAll(`#${sid} .opt.sel`)].map(o => o.dataset.v);
+}
+
+async function showRes() {
+  q2 = getVals('s2');
+  if (!q2.length) return;
+  q3 = 'occasionally';
+
+  const name  = document.getElementById('uname').value.trim();
+  const phone = document.getElementById('uphone').value.trim();
+
+  // Show results screen with loading state while we await data + save
+  go('s4');
+  const rc = document.getElementById('rcards');
+  rc.innerHTML = '<div class="loading"><div class="spinner"></div>Finding your ministries…</div>';
+
+  // Ensure ministries are loaded
+  await ministriesPromise;
+
+  let top;
+  if (q1.includes('random')) {
+    const shuffled = [...DATA].sort(() => Math.random() - 0.5);
+    top = shuffled.slice(0, 10).map(m => ({ m, s: 1 }));
+  } else {
+    top = DATA
+      .map(m => ({ m, s: scoreM(m, q1, q2, q3) }))
+      .filter(x => x.s > 0)
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 4);
+  }
+
+  // Save session and get ID for CTA tracking
+  const sessionId = await saveSession(name, phone, q1, q2, top.map(x => x.m.name));
+  currentSessionId = sessionId;
+
+  document.getElementById('rsub').textContent = q1.includes('random')
+    ? (name ? `Let the Spirit guide you, ${name}! Here are 10 ministries that need you.` : `Let the Spirit guide you! Here are 10 ministries that need you.`)
+    : (name ? `Here's what we think suits you, ${name}!` : `Here are ministries that match your answers.`);
+
+  rc.innerHTML = top.length
+    ? top.map(x => buildCard(x.m, sessionId)).join('')
+    : '<p style="text-align:center;color:#9aa3be;padding:30px 0">No exact matches — try different answers!</p>';
+}
+
+function checkStart() {
+  const name  = document.getElementById('uname').value.trim();
+  const phone = document.getElementById('uphone').value.trim();
+  document.getElementById('bstart').disabled = !(name && phone);
+}
+
+function restart() {
+  q1 = []; q2 = []; q3 = '';
+  currentSessionId = null;
+  document.querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+  ['b1', 'b2'].forEach(id => { const b = document.getElementById(id); if (b) b.disabled = true; });
+  go('s0');
+}
+</script>
+</body>
+</html>

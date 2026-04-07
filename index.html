@@ -202,6 +202,14 @@ function scoreM(m, q1, q2, q3) {
 }
 
 // ── CTA TRACKING ─────────────────────────────────────────────────────────────
+// Registry avoids any HTML/JS escaping issues with ministry names in onclick attrs
+const _ctaRegistry = {};
+
+function _cta(key, type) {
+  const e = _ctaRegistry[key];
+  if (e) trackCta(e.sessionId, e.name, type);
+}
+
 async function trackCta(sessionId, ministryName, ctaType) {
   if (!sessionId) return;
   try {
@@ -229,24 +237,26 @@ function buildCard(m, sessionId) {
   const name = document.getElementById('uname').value.trim() || 'there';
   const msg  = encodeURIComponent(`Hi! I'm ${name} and I'm new to St Ignatius. I'd love to learn more about ${m.name}. Could you tell me how I can get involved?`);
   const ph   = cleanPhone(m.phone);
-  const sid  = sessionId || '';
-  const mname = m.name.replace(/'/g, "\\'");
+
+  // Store name + sessionId in registry to avoid escaping issues in onclick
+  const key = 'k' + Math.random().toString(36).slice(2);
+  _ctaRegistry[key] = { sessionId, name: m.name };
 
   let btn = '';
   if (ph) {
     btn = `<a class="cbtn wa" href="https://wa.me/${ph}?text=${msg}" target="_blank"
-      onclick="trackCta('${sid}',${JSON.stringify(m.name)},'whatsapp')">💬 WhatsApp</a>`;
+      onclick="_cta('${key}','whatsapp')">💬 WhatsApp</a>`;
   } else if (m.email && isUrl(m.email)) {
     const url = m.email.split('|')[0].split('/')[0].trim();
     btn = `<a class="cbtn wb" href="${url.startsWith('http') ? url : 'https://' + url}" target="_blank"
-      onclick="trackCta('${sid}',${JSON.stringify(m.name)},'website')">🔗 Learn More</a>`;
+      onclick="_cta('${key}','website')">🔗 Learn More</a>`;
   } else if (m.email) {
     const em = m.email.split('/')[0].split('|')[0].trim();
     btn = `<a class="cbtn em" href="mailto:${em}?subject=Enquiry about ${encodeURIComponent(m.name)}&body=${msg}"
-      onclick="trackCta('${sid}',${JSON.stringify(m.name)},'email')">✉️ Send Email</a>`;
+      onclick="_cta('${key}','email')">✉️ Send Email</a>`;
   } else {
     btn = `<a class="cbtn em" href="mailto:church@stignatius.org.sg?subject=Enquiry about ${encodeURIComponent(m.name)}&body=${msg}"
-      onclick="trackCta('${sid}',${JSON.stringify(m.name)},'parish_office')">✉️ Contact Parish Office</a>`;
+      onclick="_cta('${key}','parish_office')">✉️ Contact Parish Office</a>`;
   }
 
   const meta = [

@@ -266,19 +266,19 @@ function buildCard(m, sessionId) {
 // ── SAVE SESSION ─────────────────────────────────────────────────────────────
 async function saveSession(name, phone, growInterests, ageGroup, topMinistries) {
   try {
-    const { data, error } = await db
+    const sessionId = crypto.randomUUID();
+    const { error } = await db
       .from('sessions')
       .insert({
+        id:                      sessionId,
         name,
         whatsapp:                phone,
         grow_interests:          growInterests,
         age_group:               ageGroup,
         recommended_ministries:  topMinistries
-      })
-      .select('id')
-      .single();
+      });
     if (error) throw error;
-    return data.id;
+    return sessionId;
   } catch (e) {
     console.warn('Could not save session:', e);
     return null;

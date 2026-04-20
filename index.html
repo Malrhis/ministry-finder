@@ -19,6 +19,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .name-label{font-size:14px;font-weight:600;color:#1a3a6b;margin-bottom:6px;align-self:flex-start}
 .name-input{width:100%;padding:14px 16px;border:2px solid #dde2f0;border-radius:14px;font-size:16px;outline:none;transition:border-color .2s;background:#f8f9fe}
 .name-input:focus{border-color:#1a3a6b;background:#fff}
+.consent-wrap{display:flex;align-items:flex-start;gap:10px;margin-top:16px;padding:14px;background:#f8f9fe;border:1.5px solid #dde2f0;border-radius:14px}
+.consent-wrap input[type=checkbox]{flex-shrink:0;width:18px;height:18px;margin-top:2px;accent-color:#1a3a6b;cursor:pointer}
+.consent-wrap label{font-size:11.5px;color:#6b7a99;line-height:1.55;cursor:pointer}
 
 /* Progress */
 .prog-wrap{display:flex;gap:6px;margin-bottom:24px}
@@ -91,6 +94,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <input class="name-input" id="uname" type="text" placeholder="e.g. Maria" autocomplete="off" oninput="checkStart()">
   <div class="name-label" style="margin-top:14px">Your WhatsApp number</div>
   <input class="name-input" id="uphone" type="tel" placeholder="e.g. 91234567" autocomplete="off" oninput="checkStart()">
+  <div class="consent-wrap">
+    <input type="checkbox" id="uconsent" onchange="checkStart()">
+    <label for="uconsent">By submitting this form, you acknowledge that your data is collected solely for internal analysis and statistical purposes regarding interest in RCIA. In compliance with the PDPA, we will not contact you for marketing or follow-up, and your information will be kept strictly confidential.</label>
+  </div>
   <button class="btn gold" id="bstart" style="margin-top:20px" onclick="go('s1')" disabled>Let's Begin →</button>
 </div>
 
@@ -243,8 +250,7 @@ function cleanPhone(p) {
 function isUrl(s) { return s && (s.startsWith('http') || s.startsWith('www') || s.startsWith('bit.')); }
 
 function buildCard(m, sessionId) {
-  const name = document.getElementById('uname').value.trim() || 'there';
-  const msg  = encodeURIComponent(`Hi! I'm ${name} and I'm new to St Ignatius. I'd love to learn more about ${m.name}. Could you tell me how I can get involved?`);
+  const msg = encodeURIComponent(`Hi! I'm a new parishioner at St Ignatius. I'd love to learn more about ${m.name}. Could you tell me how I can get involved?`);
   const ph   = cleanPhone(m.phone);
 
   // Store name + sessionId in registry to avoid escaping issues in onclick
@@ -294,7 +300,8 @@ async function saveSession(name, phone, growInterests, ageGroup, topMinistries) 
         whatsapp:                phone,
         grow_interests:          growInterests,
         age_group:               ageGroup,
-        recommended_ministries:  topMinistries
+        recommended_ministries:  topMinistries,
+        pdpa_consent:            true
       });
     if (error) throw error;
     return sessionId;
@@ -364,9 +371,10 @@ async function showRes() {
 }
 
 function checkStart() {
-  const name  = document.getElementById('uname').value.trim();
-  const phone = document.getElementById('uphone').value.trim();
-  document.getElementById('bstart').disabled = !(name && phone);
+  const name    = document.getElementById('uname').value.trim();
+  const phone   = document.getElementById('uphone').value.trim();
+  const consent = document.getElementById('uconsent').checked;
+  document.getElementById('bstart').disabled = !(name && phone && consent);
 }
 
 function restart() {
@@ -374,6 +382,8 @@ function restart() {
   currentSessionId = null;
   document.querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
   ['b1', 'b2'].forEach(id => { const b = document.getElementById(id); if (b) b.disabled = true; });
+  document.getElementById('uconsent').checked = false;
+  document.getElementById('bstart').disabled = true;
   go('s0');
 }
 </script>

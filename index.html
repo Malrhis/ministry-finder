@@ -32,8 +32,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 /* Options */
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;align-content:start}
-.opts.three{grid-template-columns:1fr 1fr 1fr}
 .opt{background:#f4f6fc;border:2.5px solid transparent;border-radius:16px;padding:16px 10px;text-align:center;cursor:pointer;transition:all .18s;user-select:none;-webkit-tap-highlight-color:transparent}
+.opt.full{grid-column:1/-1}
 .opt:active{transform:scale(.96)}
 .opt.sel{background:#e8edf8;border-color:#1a3a6b}
 .opt .ic{font-size:30px;margin-bottom:6px}
@@ -47,18 +47,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .btn.gold{background:linear-gradient(135deg,#c9a84c,#e2c06a)}
 .btn.outline{background:#fff;border:2px solid #1a3a6b;color:#1a3a6b;margin-top:10px}
 
+/* Badges */
+.badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 9px;border-radius:20px}
+.badge-pray{background:#ede0f8;color:#5b2c99}
+.badge-learn{background:#d5f5e3;color:#1a5e2e}
+.badge-mission{background:#fde8d0;color:#784212}
+.badge-sacrament{background:#d6eaf8;color:#1a5276}
+
 /* Results */
 .res-head{text-align:center;padding:24px 0 16px}
 .res-head h2{color:#1a3a6b;font-size:24px;font-weight:800}
 .res-head p{color:#6b7a99;font-size:14px;margin-top:5px;line-height:1.5}
 .card{background:#fff;border:1.5px solid #e8ecf5;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 3px 12px rgba(26,58,107,.07)}
 .card-name{font-size:17px;font-weight:800;color:#1a3a6b;margin-bottom:5px;line-height:1.3}
-.card-cat{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:3px 9px;border-radius:20px;margin-bottom:10px}
-.sp{background:#fde8d8;color:#8b4513}
-.li{background:#fde0dd;color:#b03020}
-.mu{background:#ead5f5;color:#6c3483}
-.fc{background:#d6eaf8;color:#1a5276}
-.mi{background:#d5f5e3;color:#1a5e2e}
 .card-desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:10px}
 .card-meta{font-size:12px;color:#9aa3be;margin-bottom:13px;line-height:1.6}
 .cbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;border:none;font-size:14px;font-weight:700;cursor:pointer;width:100%;text-decoration:none;transition:opacity .2s}
@@ -98,12 +100,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="q-title">How would you like<br>to grow? 🌱</div>
   <div class="q-sub">Pick all that apply</div>
   <div class="opts" id="o1">
-    <div class="opt" data-v="pray" onclick="tog(this,'s1')"><div class="ic">🙏</div><div class="lb">Pray More</div><div class="sb">Devotion & meditation</div></div>
-    <div class="opt" data-v="worship" onclick="tog(this,'s1')"><div class="ic">🎵</div><div class="lb">Worship</div><div class="sb">Music & liturgy</div></div>
+    <div class="opt" data-v="pray" onclick="tog(this,'s1')"><div class="ic">🙏</div><div class="lb">Pray More</div><div class="sb">Devotion & prayer</div></div>
     <div class="opt" data-v="learn" onclick="tog(this,'s1')"><div class="ic">📖</div><div class="lb">Learn My Faith</div><div class="sb">Scripture & formation</div></div>
-    <div class="opt" data-v="serve" onclick="tog(this,'s1')"><div class="ic">🤲</div><div class="lb">Serve Others</div><div class="sb">Service & outreach</div></div>
-    <div class="opt" data-v="connect" onclick="tog(this,'s1')"><div class="ic">👥</div><div class="lb">Find Community</div><div class="sb">Fellowship & friends</div></div>
-    <div class="opt" data-v="random" onclick="tog(this,'s1')"><div class="ic">🎲</div><div class="lb">Jesus Take the Wheel!</div></div>
+    <div class="opt" data-v="mission" onclick="tog(this,'s1')"><div class="ic">🤲</div><div class="lb">Mission & Outreach</div><div class="sb">Service & community</div></div>
+    <div class="opt" data-v="sacrament" onclick="tog(this,'s1')"><div class="ic">✝️</div><div class="lb">Serve at Mass</div><div class="sb">Liturgy & sacraments</div></div>
+    <div class="opt full" data-v="random" onclick="tog(this,'s1')"><div class="ic">🎲</div><div class="lb">Jesus Take the Wheel!</div></div>
   </div>
   <button class="btn" id="b1" disabled onclick="go('s2')">Next →</button>
 </div>
@@ -153,6 +154,7 @@ async function loadMinistriesFromDB() {
       .from('ministries')
       .select('*')
       .eq('active', true)
+      .eq('rcia_suitable', true)
       .order('sort_order');
     if (error) throw error;
     DATA = data || [];
@@ -162,43 +164,48 @@ async function loadMinistriesFromDB() {
   }
 }
 
-// ── SCORING ──────────────────────────────────────────────────────────────────
-const growMap = {
-  pray:    ['prayer','contemplative'],
-  worship: ['worship','music'],
-  learn:   ['formation','scripture'],
-  serve:   ['service','outreach','liturgy'],
-  connect: ['community'],
-  explore: ['exploring','returning'],
-  random:  ['__random__']
-};
-const whoMap = {
-  'youth': ['youth','children'],
-  'adult': ['adult','young-adult','senior','all-ages','married','couple','engaged','parent']
-};
-const timeMap = {
-  weekly:       ['weekly'],
-  monthly:      ['monthly','weekly'],
-  occasionally: ['ad-hoc','seasonal','monthly','weekly']
+// ── RESULTS ──────────────────────────────────────────────────────────────────
+const CAT_LABELS = {
+  pray:      '🙏 Pray',
+  learn:     '📖 Learn',
+  mission:   '🤲 Mission',
+  sacrament: '✝️ Sacraments'
 };
 
-const catCls = c => ({
-  'Spirituality':'sp','Liturgy':'li','Music':'mu',
-  'Formation & Community':'fc','Mission':'mi'
-})[c] || 'fc';
+function buildBadges(cats) {
+  if (!cats || !cats.length) return '';
+  return '<div class="badges">' +
+    cats.map(c => `<span class="badge badge-${c}">${CAT_LABELS[c] || c}</span>`).join('') +
+    '</div>';
+}
 
-function scoreM(m, q1, q2, q3) {
-  // tags is already a JS object from Supabase JSONB
-  const t = m.tags || { grow: [], who: [], time: [] };
-  let s = 0;
-  const wg = q1.flatMap(a => growMap[a] || []);
-  wg.forEach(g => { if (t.grow.includes(g)) s += 3; });
-  const ww = q2.flatMap(a => whoMap[a] || []);
-  if (t.who.some(w => w.includes('all-ages'))) { s += 2; }
-  else { ww.forEach(w => { if (t.who.some(tw => tw.includes(w))) s += 2; }); }
-  const wt = timeMap[q3] || [];
-  t.time.forEach(tt => { if (wt.includes(tt)) s += 1; });
-  return s;
+function getResults(data, q1, q2) {
+  const isAdult  = q2.includes('adult');
+  const isYouth  = q2.includes('youth');
+  const isRandom = q1.includes('random');
+
+  // Filter by age group
+  let filtered = data.filter(m => {
+    if (isAdult && isYouth) return m.who_adult || m.who_youth;
+    if (isAdult) return m.who_adult;
+    if (isYouth) return m.who_youth;
+    return true;
+  });
+
+  if (isRandom) {
+    return filtered.sort(() => Math.random() - 0.5);
+  }
+
+  // Filter by app_categories overlap (OR logic), sort by number of matching categories
+  return filtered
+    .map(m => {
+      const cats = m.app_categories || [];
+      const matches = q1.filter(c => cats.includes(c)).length;
+      return { m, matches };
+    })
+    .filter(x => x.matches > 0)
+    .sort((a, b) => b.matches - a.matches)
+    .map(x => x.m);
 }
 
 // ── CTA TRACKING ─────────────────────────────────────────────────────────────
@@ -228,8 +235,10 @@ function cleanPhone(p) {
   if (!p) return null;
   const first = p.split('/')[0].trim();
   const d = first.replace(/\D/g, '');
-  if (d.length >= 8) return '65' + d.slice(-8);
-  return null;
+  if (d.length < 8) return null;
+  const last8 = d.slice(-8);
+  if (last8.startsWith('6')) return null; // Singapore landline — can't WhatsApp
+  return '65' + last8;
 }
 function isUrl(s) { return s && (s.startsWith('http') || s.startsWith('www') || s.startsWith('bit.')); }
 
@@ -266,7 +275,7 @@ function buildCard(m, sessionId) {
 
   return `<div class="card">
     <div class="card-name">${m.name}</div>
-    <span class="card-cat ${catCls(m.category)}">${m.category}</span>
+    ${buildBadges(m.app_categories)}
     <div class="card-desc">${m.description || 'A ministry at Church of St Ignatius — contact us to find out more!'}</div>
     ${meta ? `<div class="card-meta">${meta}</div>` : ''}
     ${btn}
@@ -296,7 +305,7 @@ async function saveSession(name, phone, growInterests, ageGroup, topMinistries) 
 }
 
 // ── FLOW ─────────────────────────────────────────────────────────────────────
-let q1 = [], q2 = [], q3 = '';
+let q1 = [], q2 = [];
 
 function go(to) {
   if (to === 's2') { q1 = getVals('s1'); if (!q1.length) return; }
@@ -319,12 +328,11 @@ function getVals(sid) {
 async function showRes() {
   q2 = getVals('s2');
   if (!q2.length) return;
-  q3 = 'occasionally';
 
   const name  = document.getElementById('uname').value.trim();
   const phone = document.getElementById('uphone').value.trim();
+  const isRandom = q1.includes('random');
 
-  // Show results screen with loading state while we await data + save
   go('s4');
   const rc = document.getElementById('rcards');
   rc.innerHTML = '<div class="loading"><div class="spinner"></div>Finding your ministries…</div>';
@@ -332,29 +340,27 @@ async function showRes() {
   // Ensure ministries are loaded
   await ministriesPromise;
 
-  let top;
-  if (q1.includes('random')) {
-    const shuffled = [...DATA].sort(() => Math.random() - 0.5);
-    top = shuffled.slice(0, 10).map(m => ({ m, s: 1 }));
-  } else {
-    top = DATA
-      .map(m => ({ m, s: scoreM(m, q1, q2, q3) }))
-      .filter(x => x.s > 0)
-      .sort((a, b) => b.s - a.s)
-      .slice(0, 4);
-  }
+  const results = getResults(DATA, q1, q2);
+  const count   = results.length;
 
-  // Save session and get ID for CTA tracking
-  const sessionId = await saveSession(name, phone, q1, q2, top.map(x => x.m.name));
+  // Save session (cap stored names at 20 to keep payload reasonable)
+  const sessionId = await saveSession(name, phone, q1, q2, results.slice(0, 20).map(m => m.name));
   currentSessionId = sessionId;
 
-  document.getElementById('rsub').textContent = q1.includes('random')
-    ? (name ? `Let the Spirit guide you, ${name}! Here are 10 ministries that need you.` : `Let the Spirit guide you! Here are 10 ministries that need you.`)
-    : (name ? `Here's what we think suits you, ${name}!` : `Here are ministries that match your answers.`);
+  const rsub = document.getElementById('rsub');
+  if (isRandom) {
+    rsub.textContent = name
+      ? `Let the Spirit guide you, ${name}! Here are ${count} ministries that need you.`
+      : `Let the Spirit guide you! Here are ${count} ministries that need you.`;
+  } else {
+    rsub.textContent = name
+      ? `Here are ${count} ${count === 1 ? 'ministry' : 'ministries'} that match your interests, ${name}!`
+      : `Here are ${count} ${count === 1 ? 'ministry' : 'ministries'} that match your interests.`;
+  }
 
-  rc.innerHTML = top.length
-    ? top.map(x => buildCard(x.m, sessionId)).join('')
-    : '<p style="text-align:center;color:#9aa3be;padding:30px 0">No exact matches — try different answers!</p>';
+  rc.innerHTML = count
+    ? results.map(m => buildCard(m, sessionId)).join('')
+    : '<p style="text-align:center;color:#9aa3be;padding:30px 0">No matches found — try different answers!</p>';
 }
 
 function checkStart() {
@@ -364,7 +370,7 @@ function checkStart() {
 }
 
 function restart() {
-  q1 = []; q2 = []; q3 = '';
+  q1 = []; q2 = [];
   currentSessionId = null;
   document.querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
   ['b1', 'b2'].forEach(id => { const b = document.getElementById(id); if (b) b.disabled = true; });

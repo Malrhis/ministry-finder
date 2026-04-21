@@ -200,7 +200,7 @@ function getResults(data, q1, q2) {
   });
 
   if (isRandom) {
-    return filtered.sort(() => Math.random() - 0.5);
+    return filtered.sort(() => Math.random() - 0.5).slice(0, 10);
   }
 
   // Filter by app_categories overlap (OR logic), sort by number of matching categories
@@ -322,6 +322,18 @@ function go(to) {
 }
 
 function tog(el, sid) {
+  const isRandom = el.dataset.v === 'random';
+  const wasSelected = el.classList.contains('sel');
+
+  if (isRandom && !wasSelected) {
+    // Selecting random — deselect everything else first
+    document.querySelectorAll(`#${sid} .opt`).forEach(o => o.classList.remove('sel'));
+  } else if (!isRandom && !wasSelected) {
+    // Selecting a real option — deselect random if it was on
+    const randomOpt = document.querySelector(`#${sid} .opt[data-v="random"]`);
+    if (randomOpt) randomOpt.classList.remove('sel');
+  }
+
   el.classList.toggle('sel');
   const n = document.querySelectorAll(`#${sid} .opt.sel`).length;
   const bid = sid.replace('s', 'b');
@@ -357,8 +369,8 @@ async function showRes() {
   const rsub = document.getElementById('rsub');
   if (isRandom) {
     rsub.textContent = name
-      ? `Let the Spirit guide you, ${name}! Here are ${count} ministries that need you.`
-      : `Let the Spirit guide you! Here are ${count} ministries that need you.`;
+      ? `Let the Spirit guide you, ${name}! Here are 10 ministries that need you.`
+      : `Let the Spirit guide you! Here are 10 ministries that need you.`;
   } else {
     rsub.textContent = name
       ? `Here are ${count} ${count === 1 ? 'ministry' : 'ministries'} that match your interests, ${name}!`

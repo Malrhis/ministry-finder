@@ -99,12 +99,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <p>Answer 2 quick questions and we'll find the right ministry for you.</p>
   </div>
   <div class="name-label">Your name</div>
-  <input class="name-input" id="uname" type="text" placeholder="e.g. Maria" autocomplete="off" oninput="checkStart()">
+  <input class="name-input" id="uname" type="text" placeholder="e.g. Maria" autocomplete="off">
   <div class="consent-wrap">
-    <input type="checkbox" id="uconsent" onchange="checkStart()">
+    <input type="checkbox" id="uconsent">
     <label for="uconsent">By submitting this form, you acknowledge that your data is collected solely for internal analysis and statistical purposes regarding interest in RCIA. In compliance with the PDPA, we will not contact you for marketing or follow-up, and your information will be kept strictly confidential.</label>
   </div>
-  <button class="btn gold" id="bstart" style="margin-top:20px" onclick="go('s1')" disabled>Let's Begin →</button>
+  <button class="btn gold" id="bstart" style="margin-top:20px" disabled>Let's Begin →</button>
 </div>
 
 <!-- Q1 -->
@@ -113,13 +113,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="q-title">How would you like<br>to grow? 🌱</div>
   <div class="q-sub">Pick all that apply</div>
   <div class="opts" id="o1">
-    <div class="opt" data-v="pray" onclick="tog(this,'s1')"><div class="ic">🙏</div><div class="lb">Pray More</div><div class="sb">Devotion & prayer</div></div>
-    <div class="opt" data-v="learn" onclick="tog(this,'s1')"><div class="ic">📖</div><div class="lb">Learn My Faith</div><div class="sb">Scripture & formation</div></div>
-    <div class="opt" data-v="mission" onclick="tog(this,'s1')"><div class="ic">🤲</div><div class="lb">Mission & Outreach</div><div class="sb">Service & community</div></div>
-    <div class="opt" data-v="sacrament" onclick="tog(this,'s1')"><div class="ic">✝️</div><div class="lb">Serve at Mass</div><div class="sb">Liturgy & sacraments</div></div>
-    <div class="opt full" data-v="random" onclick="tog(this,'s1')"><div class="ic">🎲</div><div class="lb">Jesus Take the Wheel!</div></div>
+    <div class="opt" data-v="pray"><div class="ic">🙏</div><div class="lb">Pray More</div><div class="sb">Devotion & prayer</div></div>
+    <div class="opt" data-v="learn"><div class="ic">📖</div><div class="lb">Learn My Faith</div><div class="sb">Scripture & formation</div></div>
+    <div class="opt" data-v="mission"><div class="ic">🤲</div><div class="lb">Mission & Outreach</div><div class="sb">Service & community</div></div>
+    <div class="opt" data-v="sacrament"><div class="ic">✝️</div><div class="lb">Serve at Mass</div><div class="sb">Liturgy & sacraments</div></div>
+    <div class="opt full" data-v="random"><div class="ic">🎲</div><div class="lb">Jesus Take the Wheel!</div></div>
   </div>
-  <button class="btn" id="b1" disabled onclick="go('s2')">Next →</button>
+  <button class="btn" id="b1" disabled>Next →</button>
 </div>
 
 <!-- Q2 -->
@@ -128,10 +128,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="q-title">Tell us about<br>yourself 👤</div>
   <div class="q-sub">Pick all that apply</div>
   <div class="opts" id="o2">
-    <div class="opt" data-v="youth" onclick="tog(this,'s2')"><div class="ic">🧒</div><div class="lb">Youth</div><div class="sb">Under 21</div></div>
-    <div class="opt" data-v="adult" onclick="tog(this,'s2')"><div class="ic">👨</div><div class="lb">Adult</div><div class="sb">21 &amp; above</div></div>
+    <div class="opt" data-v="youth"><div class="ic">🧒</div><div class="lb">Youth</div><div class="sb">Under 21</div></div>
+    <div class="opt" data-v="adult"><div class="ic">👨</div><div class="lb">Adult</div><div class="sb">21 &amp; above</div></div>
   </div>
-  <button class="btn" id="b2" disabled onclick="showRes()">Find My Ministry →</button>
+  <button class="btn" id="b2" disabled>Find My Ministry →</button>
 </div>
 
 <!-- RESULTS -->
@@ -142,7 +142,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
   <div id="rcards"></div>
   <div class="try-again">
-    <button class="btn outline" onclick="restart()">← Try Again</button>
+    <button class="btn outline" id="btryagain">← Try Again</button>
   </div>
 </div>
 

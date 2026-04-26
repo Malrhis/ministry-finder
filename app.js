@@ -106,7 +106,7 @@ function cleanPhone(p) {
   const d = first.replace(/\D/g, '');
   if (d.length < 8) return null;
   const last8 = d.slice(-8);
-  if (last8.startsWith('6')) return null; // Singapore landline — can't WhatsApp
+  if (last8.startsWith('6')) return null;
   return '65' + last8;
 }
 
@@ -125,8 +125,7 @@ function buildCard(m, sessionId) {
   const msg = encodeURIComponent(
     `Hi! I'm a new parishioner at St Ignatius. I'd love to learn more about ${m.name}. Could you tell me how I can get involved?`
   );
-  const ph = cleanPhone(m.phone);
-
+  const ph  = cleanPhone(m.phone);
   const key = 'k' + Math.random().toString(36).slice(2);
   _ctaRegistry[key] = { sessionId, name: m.name };
 
@@ -134,15 +133,15 @@ function buildCard(m, sessionId) {
   if (ph) {
     btn = `<a class="cbtn wa" href="https://wa.me/${ph}?text=${msg}"
       target="_blank" rel="noopener noreferrer"
-      onclick="_cta('${key}','whatsapp')">💬 WhatsApp</a>`;
+      data-cta-key="${key}" data-cta-type="whatsapp">💬 WhatsApp</a>`;
   } else if (m.email && isUrl(m.email)) {
     const url = safeUrl(m.email);
     btn = `<a class="cbtn wb" href="${esc(url)}"
       target="_blank" rel="noopener noreferrer"
-      onclick="_cta('${key}','website')">🔗 Learn More</a>`;
+      data-cta-key="${key}" data-cta-type="website">🔗 Learn More</a>`;
   } else {
     btn = `<a class="cbtn em" href="mailto:church@stignatius.org.sg?subject=Enquiry about ${encodeURIComponent(m.name)}&body=${msg}"
-      onclick="_cta('${key}','parish_office')">✉️ Contact Parish Office</a>`;
+      data-cta-key="${key}" data-cta-type="parish_office">✉️ Contact Parish Office</a>`;
   }
 
   const meta = [
@@ -204,8 +203,7 @@ function tog(el, sid) {
 
   el.classList.toggle('sel');
   const n   = document.querySelectorAll(`#${sid} .opt.sel`).length;
-  const bid = sid.replace('s', 'b');
-  const btn = document.getElementById(bid);
+  const btn = document.getElementById(sid.replace('s', 'b'));
   if (btn) btn.disabled = n === 0;
 }
 
@@ -263,3 +261,27 @@ function restart() {
   document.getElementById('bstart').disabled  = true;
   go('s0');
 }
+
+// ── EVENT LISTENERS ──────────────────────────────────────────────────────────
+document.getElementById('uname').addEventListener('input', checkStart);
+document.getElementById('uconsent').addEventListener('change', checkStart);
+document.getElementById('bstart').addEventListener('click', () => go('s1'));
+document.getElementById('b1').addEventListener('click', () => go('s2'));
+document.getElementById('b2').addEventListener('click', showRes);
+document.getElementById('btryagain').addEventListener('click', restart);
+
+document.getElementById('o1').addEventListener('click', e => {
+  const opt = e.target.closest('.opt');
+  if (opt) tog(opt, 's1');
+});
+
+document.getElementById('o2').addEventListener('click', e => {
+  const opt = e.target.closest('.opt');
+  if (opt) tog(opt, 's2');
+});
+
+// Delegated listener for CTA buttons in dynamically built cards
+document.getElementById('rcards').addEventListener('click', e => {
+  const btn = e.target.closest('[data-cta-key]');
+  if (btn) _cta(btn.dataset.ctaKey, btn.dataset.ctaType);
+});

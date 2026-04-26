@@ -84,7 +84,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .spinner{width:36px;height:36px;border:3px solid #e5e9f5;border-top-color:#1a3a6b;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.104.1/dist/umd/supabase.min.js"
+  integrity="sha384-ZstPgNL30sIz6Hlxmz87Qsg817okoeAfmzXv89YLICmfsKv3pEdQKOokOL2IpVAS"
+  crossorigin="anonymous"></script>
 </head>
 <body>
 <div class="app">
@@ -244,6 +246,14 @@ async function trackCta(sessionId, ministryName, ctaType) {
 }
 
 // ── CARD BUILDER ─────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function cleanPhone(p) {
   if (!p) return null;
   const first = p.split('/')[0].trim();
@@ -268,27 +278,23 @@ function buildCard(m, sessionId) {
     btn = `<a class="cbtn wa" href="https://wa.me/${ph}?text=${msg}" target="_blank"
       onclick="_cta('${key}','whatsapp')">💬 WhatsApp</a>`;
   } else if (m.email && isUrl(m.email)) {
-    const url = m.email.split('|')[0].split('/')[0].trim();
+    const url = m.email.split('|')[0].trim();
     btn = `<a class="cbtn wb" href="${url.startsWith('http') ? url : 'https://' + url}" target="_blank"
       onclick="_cta('${key}','website')">🔗 Learn More</a>`;
-  } else if (m.email) {
-    const em = m.email.split('/')[0].split('|')[0].trim();
-    btn = `<a class="cbtn em" href="mailto:${em}?subject=Enquiry about ${encodeURIComponent(m.name)}&body=${msg}"
-      onclick="_cta('${key}','email')">✉️ Send Email</a>`;
   } else {
     btn = `<a class="cbtn em" href="mailto:church@stignatius.org.sg?subject=Enquiry about ${encodeURIComponent(m.name)}&body=${msg}"
       onclick="_cta('${key}','parish_office')">✉️ Contact Parish Office</a>`;
   }
 
   const meta = [
-    m.meeting ? `🕐 ${m.meeting}` : '',
-    m.age     ? `👤 ${m.age}`     : ''
+    m.meeting ? `🕐 ${esc(m.meeting)}` : '',
+    m.age     ? `👤 ${esc(m.age)}`     : ''
   ].filter(Boolean).join('<br>');
 
   return `<div class="card">
-    <div class="card-name">${m.name}</div>
+    <div class="card-name">${esc(m.name)}</div>
     ${buildBadges(m.app_categories)}
-    <div class="card-desc">${m.description || 'A ministry at Church of St Ignatius — contact us to find out more!'}</div>
+    <div class="card-desc">${esc(m.description || 'A ministry at Church of St Ignatius — contact us to find out more!')}</div>
     ${meta ? `<div class="card-meta">${meta}</div>` : ''}
     ${btn}
   </div>`;
